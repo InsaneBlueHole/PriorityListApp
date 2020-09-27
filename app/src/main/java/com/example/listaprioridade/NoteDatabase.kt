@@ -11,50 +11,55 @@ import kotlinx.coroutines.launch
 @Database(entities = [Note::class], version = 1,exportSchema = false)
 abstract class NoteDatabase: RoomDatabase() {
 
-    abstract fun noteDao():NoteDao
+    abstract fun noteDao(): NoteDao
 
-    companion object{
-        @Volatile
-        private var INSTANCE:NoteDatabase?=null
+    class NoteDatabaseCallback(
+        private val scope: CoroutineScope
+    ) : RoomDatabase.Callback() {
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            INSTANCE?.let { database ->
+                scope.launch {
+                    val noteDao = database.noteDao()
 
-        fun getDatabase(context:Context):NoteDatabase{
-            val tempInstance = INSTANCE
-            if (tempInstance!= null){
-                return tempInstance
+                    noteDao.deleteAllNotes()
+
+
+                    var note = Note("title 2", "description 5", 3)
+                    noteDao.insert(note)
+                    note = Note("title 2", "description 5", 2)
+                    noteDao.insert(note)
+                    note = Note("title 2", "description 5", 3)
+                    noteDao.insert(note)
+                    note = Note("title 2", "description 5", 1)
+                    noteDao.insert(note)
+
+                }
             }
-            synchronized(this){
+        }
+    }
+
+
+    companion object {
+        @Volatile
+        private var INSTANCE: NoteDatabase? = null
+
+        fun getDatabase(context: Context, scope: CoroutineScope): NoteDatabase {
+
+            return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     NoteDatabase::class.java,
-                    "note_database")
-                    .fallbackToDestructiveMigration()
+                    "note_database"
+                )
+                    .addCallback(NoteDatabaseCallback(scope))
                     .build()
 
                 INSTANCE = instance
 
-                return instance
-            }
-        }
-
-        class NoteDatabaseCallback(
-            private val scope:CoroutineScope
-        ): RoomDatabase.Callback(){
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-                INSTANCE?.let { database ->
-                    scope.launch {
-                        var noteDao = database.noteDao()
-
-                        noteDao.deleteAllNotes()
-
-
-                        var note = Note("title 1", "description 1", 1)
-                        noteDao.insert(note)
-                    }
-                }
+                instance
             }
         }
 
     }
-
 }

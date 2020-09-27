@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class NoteViewModel(application: Application): AndroidViewModel(application) {
@@ -14,7 +13,7 @@ class NoteViewModel(application: Application): AndroidViewModel(application) {
     val allNotes:LiveData<List<Note>>
 
     init {
-        val noteDao = NoteDatabase.getDatabase(application).noteDao()
+        val noteDao = NoteDatabase.getDatabase(application,viewModelScope).noteDao()
         repository = NoteRepository(noteDao)
         allNotes = repository.allNotes
     }
