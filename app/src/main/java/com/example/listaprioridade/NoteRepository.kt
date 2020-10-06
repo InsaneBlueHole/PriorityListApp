@@ -1,6 +1,6 @@
 package com.example.listaprioridade
 
-import android.app.Application
+
 import androidx.lifecycle.LiveData
 
 class NoteRepository constructor(private val noteDao:NoteDao ) {
